@@ -17,13 +17,6 @@ user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
 # Initialize PRAW
 r = praw.Reddit(user_agent=user_agent)
 
-# Initialize MongoDB for result storage
-# Spin up collection called LoL.LoLPatchSentiment
-def MongoStart():
-	client = MongoClient()
-	db = client.LoL
-	collection = db.LoLPatchSentiment
-
 class Patch:
 	"""a class representing a LoL patch"""
 
@@ -118,31 +111,30 @@ def Plot(data, xlabels):
 
 	plt.show()
 
-def main():
+def main(url):
 
 	# Find patch IDs and links to official patch notes
-	patchtable = ScrapeTable(url)
-
+	df = ScrapeTable(url)
+	urls = df.Link.values
+	urlcount = len(url)
 	# Get sentiment score for each patch, store
 	patchsentiment = []
-	for patchID in links.keys():
-		PatchObj = Patch(patchID, links[patchID])
-		PatchObj.Run(True)
-		patchsentiment.append([PatchObj.patchID, PatchObj.sentiment])
-		collection.insert({
-			"patch": PatchObj.patchID, 
-			"sentiment": PatchObj.sentiment,
-			"commentcount": PatchObj.commentcount
-			})
-		print PatchObj.patchID, PatchObj.sentiment
+	for num, url in enumerate(urls):
+		PatchObj = Patch(url, expanded=True)
+		PatchObj.Run()
+		patchsentiment.append(PatchObj.sentiment)
+		print PatchObj.sentiment
+		print 'On patch %s of %s' % (num, urlcount)
 
-	collection.insert({"final": patchsentiment})
+	df['Sentiment'] = patchsentiment
+	return df
 
-	# Plot Sentiments
-	data = np.matrix(patchsentiment)
-	data_asarray = np.asarray(data)
-	Plot(patchsentiment)
+if __name__ == '__main__':
+	# LoL Wiki URL to scrape patch IDs and patch notes URLs
+	url = "http://leagueoflegends.wikia.com/wiki/Patch"
+	user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
 
-#if __name__ == '__main__':
-		#main()
-
+	# Initialize PRAW
+	r = praw.Reddit(user_agent=user_agent)
+	result = main(url)
+	result.to_csv('LoL Sentiment Scores')
