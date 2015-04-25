@@ -1,4 +1,3 @@
-import re
 import requests
 
 import numpy as np
@@ -8,21 +7,22 @@ import praw
 from textblob import TextBlob
 from pymongo import MongoClient
 import pandas as pd
-
 # Would it be better to only look at root comments?
 # Reddit patch sentiment analysis
 
 # LoL Wiki URL to scrape patch IDs and patch notes URLs
 url = "http://leagueoflegends.wikia.com/wiki/Patch"
+user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
 
 # Initialize PRAW
-user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
 r = praw.Reddit(user_agent=user_agent)
 
 # Initialize MongoDB for result storage
-client = MongoClient()
-db = client.LoL
-collection = db.LoLPatchSentiment
+# Spin up collection called LoL.LoLPatchSentiment
+def MongoStart():
+	client = MongoClient()
+	db = client.LoL
+	collection = db.LoLPatchSentiment
 
 class Patch:
 	"""a class representing a LoL patch"""
@@ -72,30 +72,39 @@ class Patch:
 		self.GetComments(expanded)
 		self.CalcSentiment()
 
-def ParseRow(row):
-	"Checks if the row has data, and returns parsed data if it does"
-	columns = row.find_all("td")
-	if columns:
-		patch = columns[0].text
-		date = columns[1].text
-		new_champion = columns[2].text
-		other = columns[3].text
-		link = columns[4].find("a")["href"]
-		parsed_row = (patch, date, new_champion, other, link)
-		return parsed_row
+def ParseLoLWikiRow(row):
+	patch = row[0].text.strip()
+	date = row[1].text.strip()
+	new_champion = row[2].text.strip()
+	other = row[3].text.strip()
+	link = row[4].find("a")["href"].strip()
+	parsed_row = (patch, date, new_champion, other, link)
+	return parsed_row
+
+
+def ParseTable(table):
+	"""Return tuple of parsed data"""
+	parsedtable = []
+	headers = table.find_all("th")
+	tablewidth = len(headers)
+	columnnames = [h.text.strip() for h in headers]
+	rows = table.find_all("tr")
+	for row in rows:
+		data = row.find_all("td")
+		if data:
+			parsedtable.append(ParseLoLWikiRow(data))
+	return parsedtable, columnnames
+
 
 def ScrapeTable(url):
 	"""Scrape website for the patch table and return it as a DataFrame"""
 	r = requests.get(url)
 	data = r.text
 	soup = BeautifulSoup(data)
-	wikidata = []
 
 	table = soup.find("table", class_="wikitable")
-	rows = table.find_all("tr")
-	for row in rows:
-		wikidata.append(ParseRow(row))
-	return pd.DataFrame(wikidata)
+	parsedtable, headers = ParseTable(table)
+	return pd.DataFrame(data = parsedtable, columns = headers)
 
 def Plot(data, xlabels):
 	index = np.arange(len(data))
@@ -134,5 +143,6 @@ def main():
 	data_asarray = np.asarray(data)
 	Plot(patchsentiment)
 
-if __name__ == '__main__':
-		main()
+#if __name__ == '__main__':
+		#main()
+
