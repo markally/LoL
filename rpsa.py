@@ -27,20 +27,20 @@ def MongoStart():
 class Patch:
 	"""a class representing a LoL patch"""
 
-	def __init__(self, patchID, url):
-		self.patchID = patchID
-		self.url = url
+	def __init__(self, patchurl, expanded=False):
+		self.url = patchurl
+		self.expanded = expanded
 
 	def SearchSubmissions(self):
 		"""store a generator for submissions that match the url"""
 		subreddit = "leagueoflegends"
 		self.submissions = r.search(self.url, subreddit=subreddit)
 
-	def GetComments(self, expanded):
+	def GetComments(self):
 		"""get and store comment objects from all submissions"""
 		comments = []
 		for submission in self.submissions:
-			if expanded:
+			if self.expanded:
 				submission.replace_more_comments()
 			flatlist = praw.helpers.flatten_tree(submission.comments)
 			for singlecomment in flatlist:
@@ -62,14 +62,14 @@ class Patch:
 			self.sentiment = 0
 			self.commentcount = commentcount
 
-	def Run(self, expanded):
+	def Run(self):
 		"""
 		Searches for submissions matching patch
 		Gets comments (expanded=True expands deeper in to threads)
 		Calcs and returns an average sentiment score for the patch.
 		"""
 		self.SearchSubmissions()
-		self.GetComments(expanded)
+		self.GetComments()
 		self.CalcSentiment()
 
 def ParseLoLWikiRow(row):
