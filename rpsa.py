@@ -125,6 +125,8 @@ def main(url):
 		patchsentiment.append(PatchObj.sentiment)
 		print PatchObj.sentiment
 		print 'On patch %s of %s' % (num, urlcount)
+		temp = pd.DataFrame(patchsentiment)
+		temp.to_csv('Temp Sentiments')
 
 	df['Sentiment'] = patchsentiment
 	return df
