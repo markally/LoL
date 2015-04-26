@@ -116,7 +116,7 @@ def main(url):
 	# Find patch IDs and links to official patch notes
 	df = ScrapeTable(url)
 	urls = df.Link.values
-	urlcount = len(url)
+	urlcount = len(urls)
 	# Get sentiment score for each patch, store
 	patchsentiment = []
 	for num, url in enumerate(urls):
