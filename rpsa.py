@@ -93,7 +93,7 @@ def ScrapeTable(url):
 	"""Scrape website for the patch table and return it as a DataFrame"""
 	r = requests.get(url)
 	data = r.text
-	soup = BeautifulSoup(data)
+	soup = BeautifulSoup(data, "html.parser")
 
 	table = soup.find("table", class_="wikitable")
 	parsedtable, headers = ParseTable(table)
