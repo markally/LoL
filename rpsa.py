@@ -1,12 +1,12 @@
 import requests
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import praw
 from textblob import TextBlob
-from pymongo import MongoClient
-import pandas as pd
+
 # Would it be better to only look at root comments?
 # Reddit patch sentiment analysis
 
