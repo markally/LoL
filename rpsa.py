@@ -7,20 +7,14 @@ from bs4 import BeautifulSoup
 import praw
 from textblob import TextBlob
 
-# Would it be better to only look at root comments?
 # Reddit patch sentiment analysis
-
-# LoL Wiki URL to scrape patch IDs and patch notes URLs
-url = "http://leagueoflegends.wikia.com/wiki/Patch"
-user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
-
-# Initialize PRAW
-r = praw.Reddit(user_agent=user_agent)
 
 class Patch:
 	"""a class representing a LoL patch"""
 
 	def __init__(self, patchurl, expanded=False):
+		"""expanded = True returns all comments instead of top comments.
+		Requires additional API calls"""
 		self.url = patchurl
 		self.expanded = expanded
 
@@ -31,13 +25,13 @@ class Patch:
 
 	def GetComments(self):
 		"""get and store comment objects from all submissions"""
-		comments = []
 		for submission in self.submissions:
 			if self.expanded:
 				submission.replace_more_comments()
-			flatlist = praw.helpers.flatten_tree(submission.comments)
-			for singlecomment in flatlist:
-				comments.append(singlecomment)
+				commentobjs = praw.helpers.flatten_tree(submission.comments)
+				comments = [str(comment) for comment in commmentobjs]
+			else:
+				comments = [str(comment) for comment in submission.comments if comment.is_root]
 		self.comments = comments
 
 	def CalcSentiment(self):
@@ -66,6 +60,7 @@ class Patch:
 		self.CalcSentiment()
 
 def ParseLoLWikiRow(row):
+	"""Scrape and clean elements of interest from row. Return as tuple."""
 	patch = row[0].text.strip()
 	date = row[1].text.strip()
 	new_champion = row[2].text.strip()
@@ -100,6 +95,7 @@ def ScrapeTable(url):
 	return pd.DataFrame(data = parsedtable, columns = headers)
 
 def Plot(data, xlabels):
+	"""Not functioning, not currently used."""
 	index = np.arange(len(data))
 
 	plt.bar(index, data)
@@ -112,7 +108,12 @@ def Plot(data, xlabels):
 	plt.show()
 
 def main(url):
-
+	"""Scrape the patch details from the LoL Wiki.
+	Use Reddit API to access all the submissions pointing at each patch note URL.
+	Collect root comments (all comments if expanded=True)
+	Calculate average sentiment per patch, and add to table.
+	Return a pandas DataFrame with all data.
+	"""
 	# Find patch IDs and links to official patch notes
 	df = ScrapeTable(url)
 	urls = df.Link.values
@@ -120,7 +121,7 @@ def main(url):
 	# Get sentiment score for each patch, store
 	patchsentiment = []
 	for num, url in enumerate(urls):
-		PatchObj = Patch(url, expanded=True)
+		PatchObj = Patch(url)
 		PatchObj.Run()
 		patchsentiment.append(PatchObj.sentiment)
 		print PatchObj.sentiment
@@ -134,9 +135,11 @@ def main(url):
 if __name__ == '__main__':
 	# LoL Wiki URL to scrape patch IDs and patch notes URLs
 	url = "http://leagueoflegends.wikia.com/wiki/Patch"
-	user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
 
 	# Initialize PRAW
+	# Praw has a build in rate limiter. 1 API call every 2 seconds.
 	r = praw.Reddit(user_agent=user_agent)
+	user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
+
 	result = main(url)
-	result.to_csv('LoL Sentiment Scores')
+	result.to_csv('LoL Sentiment Scores', encoding='utf-8')
