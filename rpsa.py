@@ -25,29 +25,28 @@ class Patch:
 
 	def GetComments(self):
 		"""get and store comment objects from all submissions"""
+		comments = []
 		for submission in self.submissions:
 			if self.expanded:
 				submission.replace_more_comments()
 				commentobjs = praw.helpers.flatten_tree(submission.comments)
-				comments = [str(comment) for comment in commmentobjs]
+				comments.extend([comment.body for comment in commmentobjs])
 			else:
-				comments = [str(comment) for comment in submission.comments if comment.is_root]
+				submission.replace_more_comments(limit=0)
+				comments.extend([comment.body for comment in submission.comments if comment.is_root])
 		self.comments = comments
+		self.commentcount = len(comments)
 
 	def CalcSentiment(self):
 		"""sets average sentiment and # of comments"""
-		commentcount = 0
 		sentimentsum = 0
-		for comment in self.comments:
-			commentcount += 1
-			text = TextBlob(comment.body)
-			sentimentsum += text.sentiment.polarity
-		if commentcount > 0:
-			self.sentiment = sentimentsum / commentcount
-			self.commentcount = commentcount
+		if self.commentcount > 0:
+			for comment in self.comments:
+				text = TextBlob(comment)
+				sentimentsum += text.sentiment.polarity
+			self.sentiment = sentimentsum / self.commentcount
 		else:
 			self.sentiment = 0
-			self.commentcount = commentcount
 
 	def Run(self):
 		"""
@@ -84,7 +83,7 @@ def ParseTable(table):
 	return parsedtable, columnnames
 
 
-def ScrapeTable(url):
+def ScrapeTable(url, praw):
 	"""Scrape website for the patch table and return it as a DataFrame"""
 	r = requests.get(url)
 	data = r.text
@@ -115,7 +114,7 @@ def main(url):
 	Return a pandas DataFrame with all data.
 	"""
 	# Find patch IDs and links to official patch notes
-	df = ScrapeTable(url)
+	df = ScrapeTable(url, r)
 	urls = df.Link.values
 	urlcount = len(urls)
 	# Get sentiment score for each patch, store
@@ -138,8 +137,8 @@ if __name__ == '__main__':
 
 	# Initialize PRAW
 	# Praw has a build in rate limiter. 1 API call every 2 seconds.
-	r = praw.Reddit(user_agent=user_agent)
 	user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
+	r = praw.Reddit(user_agent=user_agent)
 
 	result = main(url)
 	result.to_csv('LoL Sentiment Scores', encoding='utf-8')
