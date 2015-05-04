@@ -20,7 +20,7 @@ class Patch:
         """store a generator for submissions that match the url"""
         subreddit = "leagueoflegends"
         # praw isn't handling urls correctly, use url:'url' instead of just 'url'
-        submission_generator = r.search('url:%s' % self.url, subreddit=subreddit)
+        submission_generator = self.r.search('url:%s' % self.url, subreddit=subreddit)
         self.submissions = [sub_obj for sub_obj in submission_generator]
 
     def parse_submission_data(self, submission):
@@ -80,7 +80,7 @@ class Patch:
     def build_comment_table(self, root_only=True):
         comment_table = []
         for submission in self.submissions:
-            comments = self.get_comments(submission)
+            comments = self.get_comments(submission, root_only)
             for comment in comments:
                 data = self.parse_comment_data(comment)
                 comment_table.append(data)
@@ -89,8 +89,8 @@ class Patch:
     def collect_all(self, root_only=True):
         """collect all data and return submission and comment table"""
         self.search_submissions()
-        submission_table = build_submission_table()
-        comment_table = build_comment_table(root_only)
+        submission_table = self.build_submission_table()
+        comment_table = self.build_comment_table(root_only)
         return submission_table, comment_table
 
 
