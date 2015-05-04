@@ -86,5 +86,13 @@ class Patch:
                 comment_table.append(data)
         return comment_table
 
+    def collect_all(self, root_only=True):
+        """collect all data and return submission and comment table"""
+        self.search_submissions()
+        submission_table = build_submission_table()
+        comment_table = build_comment_table(root_only)
+        return submission_table, comment_table
+
+
 
 
