@@ -23,13 +23,6 @@ class Patch:
         submission_generator = r.search('url:%s' % self.url, subreddit=subreddit)
         self.submissions = [sub_obj for sub_obj in submission_generator]
 
-    def get_comments(self, submission, root_only=True):
-        """get and store comment objects from all submissions"""
-        if root_only:
-            submission.replace_more_comments(limit=0)
-        else:
-            submission.replace_more_comments(limit=None)
-
     def parse_submission_data(self, submission):
         """Returns a tuple of relevant submission data"""
         sub_id = submission.id
@@ -47,7 +40,51 @@ class Patch:
             submission_table.append(data)
         return submission_table
 
-    def build_comment_table(self):
-        pass
+    def get_comments(self, submission, root_only):
+        """
+        Replaces MoreComment objects with Comment objects.
+        Returns list of objects."""
+        if root_only:
+            # Iterate through root comments replacing MoreComment objects
+            # API is the rate limiter, not loop time
+            while praw.objects.MoreComments in submission.comments:
+                for i, comment in enumerate(submission.comments):
+                    if type(comment) == praw.objects.MoreComments:
+                        submission.comments.extend(submission.comments.pop[i].comments())
+            return submission.comments
+        else:
+            submission.replace_more_comments(limit=None)
+            commentobjs = praw.helpers.flatten_tree(submission.comments)
+            return commentobjs
+
+    def parse_comment_data(self, comment):
+        """Returns a tuple of relevant comment data"""
+        comment_id = comment.id
+        parent_id = comment.parent_id
+        submission_id = comment.submission.id
+        subreddit_id = str(comment.subreddit)
+        creation_date = comment.created_utc
+        score = comment.score
+        controversiality = comment.controversiality
+        text = comment.body
+        return (
+            comment_id,
+            parent_id,
+            submission_id,
+            subreddit_id,
+            creation_date,
+            score,
+            controversiality,
+            text)
+
+    def build_comment_table(self, root_only=True):
+        comment_table = []
+        for submission in self.submissions:
+            comments = self.get_comments(submission)
+            for comment in comments:
+                data = self.parse_comment_data(comment)
+                comment_table.append(data)
+        return comment_table
+
 
 
