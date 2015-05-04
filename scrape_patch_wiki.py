@@ -43,5 +43,5 @@ def main():
     """Scrape LoL Patch info from the Wiki, return it and save it as a csv."""
     url = "http://leagueoflegends.wikia.com/wiki/Patch"
     df = ScrapeTable(url)
-    pd.to_csv('patch_table')
+    df.to_csv('patch_table', encoding='utf-8')
     return df
