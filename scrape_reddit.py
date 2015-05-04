@@ -2,13 +2,13 @@
 import pandas as pd
 import praw
 
-# Initialize PRAW
-# Praw has a build in rate limiter. 1 API call every 2 seconds.
-user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
-r = praw.Reddit(user_agent=user_agent)
-
 class Patch:
     """a class representing a LoL patch"""
+    
+    # Initialize PRAW
+    # Praw has a build in rate limiter. 1 API call every 2 seconds.
+    user_agent = ("LoL Patch Sentiment analysis 1.0 by /u/LivingInSloMo")
+    r = praw.Reddit(user_agent=user_agent)
 
     def __init__(self, patch_id, patch_url):
         """root_only will return only top-level comments"""
