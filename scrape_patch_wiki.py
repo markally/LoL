@@ -11,6 +11,7 @@ def ParseLoLWikiRow(row):
     new_champion = row[2].text.strip()
     other = row[3].text.strip()
     link = row[4].find("a")["href"].strip()
+    link_stem = link[link.find('league'):]
     parsed_row = (patch, date, new_champion, other, link)
     return parsed_row
 
