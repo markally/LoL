@@ -20,8 +20,13 @@ class Patch:
         """store a generator for submissions that match the url"""
         subreddit = "leagueoflegends"
         # praw isn't handling urls correctly, use url:'url' instead of just 'url'
-        submission_generator = self.r.search('url:%s' % self.url, subreddit=subreddit)
-        self.submissions = [sub_obj for sub_obj in submission_generator]
+        while True:
+            try:
+                submission_generator = self.r.search('url:%s' % self.url, subreddit=subreddit)
+                self.submissions = [sub_obj for sub_obj in submission_generator]
+                break
+            except praw.errors.PRAWException:
+                continue
 
     def parse_submission_data(self, submission):
         """Returns a tuple of relevant submission data"""
@@ -53,9 +58,14 @@ class Patch:
                         submission.comments.extend(submission.comments.pop[i].comments())
             return submission.comments
         else:
-            submission.replace_more_comments(limit=None)
-            commentobjs = praw.helpers.flatten_tree(submission.comments)
-            return commentobjs
+            while True:
+                try:
+                    submission.replace_more_comments(limit=None)
+                    commentobjs = praw.helpers.flatten_tree(submission.comments)
+                    return commentobjs
+                except praw.errors.PRAWException:
+                    continue
+
 
     def parse_comment_data(self, comment):
         """Returns a tuple of relevant comment data"""
