@@ -25,7 +25,7 @@ class Patch:
                 submission_generator = self.r.search('url:%s' % self.url, subreddit=subreddit)
                 self.submissions = [sub_obj for sub_obj in submission_generator]
                 break
-            except praw.errors.PRAWException:
+            except:
                 continue
 
     def parse_submission_data(self, submission):
@@ -63,7 +63,7 @@ class Patch:
                     submission.replace_more_comments(limit=None)
                     commentobjs = praw.helpers.flatten_tree(submission.comments)
                     return commentobjs
-                except praw.errors.PRAWException:
+                except:
                     continue
 
 
