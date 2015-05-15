@@ -16,7 +16,7 @@ def main():
     patch_num = len(df.index.values)
 
     for i in df.index.values:
-        print "On patch %s of %s..." % (i, patch_num)
+        print "On patch %s of %s..." % (i+1, patch_num+1)
         patch = Patch(df.ix[i, 'Patch'], df.ix[i, 'Link'])
         submission_table, comment_table = patch.collect_all(root_only=False)
         sub_temp = pd.DataFrame(submission_table)

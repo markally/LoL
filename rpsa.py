@@ -21,7 +21,8 @@ class Patch:
 	def SearchSubmissions(self):
 		"""store a generator for submissions that match the url"""
 		subreddit = "leagueoflegends"
-		self.submissions = r.search(self.url, subreddit=subreddit)
+		# praw isn't handling urls correctly, use url:'url' instead of just 'url'
+		self.submissions = r.search('url:%s' % self.url, subreddit=subreddit)
 
 	def GetComments(self):
 		"""get and store comment objects from all submissions"""
@@ -83,7 +84,7 @@ def ParseTable(table):
 	return parsedtable, columnnames
 
 
-def ScrapeTable(url, praw):
+def ScrapeTable(url):
 	"""Scrape website for the patch table and return it as a DataFrame"""
 	r = requests.get(url)
 	data = r.text
@@ -114,7 +115,7 @@ def main(url):
 	Return a pandas DataFrame with all data.
 	"""
 	# Find patch IDs and links to official patch notes
-	df = ScrapeTable(url, r)
+	df = ScrapeTable(url)
 	urls = df.Link.values
 	urlcount = len(urls)
 	# Get sentiment score for each patch, store

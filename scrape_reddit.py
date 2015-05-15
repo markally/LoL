@@ -25,8 +25,17 @@ class Patch:
                 submission_generator = self.r.search('url:%s' % self.url, subreddit=subreddit)
                 self.submissions = [sub_obj for sub_obj in submission_generator]
                 break
-            except:
+            except APIException:
+                print 'API Exception caught... trying again'
+                error_count += 1
                 continue
+            except ClientException:
+                print 'Client Exception caught... trying again'
+                error_count +=1
+                continue
+            if error_count > 5:
+                print '5 errors found, moving on'   
+                break
 
     def parse_submission_data(self, submission):
         """Returns a tuple of relevant submission data"""
@@ -59,12 +68,22 @@ class Patch:
             return submission.comments
         else:
             while True:
+                error_count = 0
                 try:
                     submission.replace_more_comments(limit=None)
                     commentobjs = praw.helpers.flatten_tree(submission.comments)
                     return commentobjs
-                except:
+                except APIException:
+                    print 'API Exception caught... trying again'
+                    error_count += 1
                     continue
+                except ClientException:
+                    print 'Client Exception caught... trying again'
+                    error_count +=1
+                    continue
+                if error_count > 5:
+                    print '5 errors found, moving on'
+                    break
 
 
     def parse_comment_data(self, comment):
@@ -98,9 +117,13 @@ class Patch:
 
     def collect_all(self, root_only=True):
         """collect all data and return submission and comment table"""
+        print 'Collecting submissions for %s' % self.patch_id
         self.search_submissions()
         submission_table = self.build_submission_table()
+        print 'Submission table appended to.'
+        print 'Collecting comments...'
         comment_table = self.build_comment_table(root_only)
+        print 'Completed patch %s, moving on...' % self.patch_id
         return submission_table, comment_table
 
 
