@@ -1,0 +1,13 @@
+http://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf #RNTN paper
+http://deeplearning4j.org/sentiment_analysis_word2vec.html # word2vec for sentiment analysis
+http://deeplearning4j.org/recursiveneuraltensornetwork.html # RNTN for sentiment analysis
+
+
+NLP
+http://textminingonline.com/dive-into-nltk-part-ii-sentence-tokenize-and-word-tokenize # tokenizing guide
+http://nparc.cisti-icist.nrc-cnrc.gc.ca/npsi/ctrl?action=rtdoc&an=8914166 # unsupervised sentiment analysis using seed words
+http://en.wikipedia.org/wiki/Pointwise_mutual_information # above uses mutual information
+
+Python
+https://docs.python.org/2/library/logging.html # event logging
+https://radimrehurek.com/gensim/ # python word2vec implementation
